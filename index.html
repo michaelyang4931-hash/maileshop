@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>麦乐 · 扫码支付</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: #f5f5f5; min-height: 100vh;
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+  }
+  .card {
+    background: #fff; border-radius: 16px; padding: 36px 28px;
+    width: 100%; max-width: 360px; text-align: center;
+    box-shadow: 0 4px 24px rgba(0,0,0,.08);
+  }
+  .shop { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  .sub { color: #888; font-size: 14px; margin-bottom: 24px; }
+  .spinner {
+    width: 36px; height: 36px; margin: 0 auto 16px;
+    border: 3px solid #eee; border-top-color: #07c160; border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .hint { color: #333; font-size: 16px; font-weight: 600; margin: 16px 0 8px; }
+  .qrimg {
+    width: 230px; height: 230px; display: block; margin: 0 auto;
+    border: 1px solid #eee; border-radius: 8px;
+    -webkit-touch-callout: default;
+  }
+  .btns { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+  .btn {
+    display: block; padding: 14px; border-radius: 10px;
+    font-size: 16px; font-weight: 600; text-decoration: none; color: #fff;
+  }
+  .btn.ali { background: #1677ff; }
+  .tip { margin-top: 20px; font-size: 12px; color: #aaa; line-height: 1.7; }
+  .warn { color: #b04a4a; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="shop">麦乐</div>
+  <div class="sub">扫码支付 · 支持微信 / 支付宝</div>
+
+  <!-- 微信内打开:展示微信收款码,长按识别 -->
+  <div id="wxBox" style="display:none">
+    <img class="qrimg" src="data:image/png;base64,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" alt="微信收款码">
+    <div class="hint">长按识别二维码完成支付</div>
+    <div class="tip"><span class="warn">请确认收款方为「麦乐」</span>后再付款</div>
+  </div>
+
+  <!-- 支付宝内打开:自动跳转;其他浏览器:手动选择 -->
+  <div id="otherBox" style="display:none">
+    <div class="spinner" id="spinner"></div>
+    <div class="hint" id="hint">正在跳转到支付宝…</div>
+    <div class="btns" id="manualBtns" style="display:none">
+      <a class="btn ali" href="https://qr.alipay.com/2m616195w3vpoow2hqpvtf8">支付宝支付</a>
+    </div>
+    <div class="tip" id="manualTip" style="display:none">微信用户请用微信扫码<br>进入后长按识别二维码付款</div>
+  </div>
+</div>
+<script>
+(function () {
+  var ua = navigator.userAgent || "";
+  var aliUrl = "https://qr.alipay.com/2m616195w3vpoow2hqpvtf8";
+  var wxBox = document.getElementById("wxBox");
+  var otherBox = document.getElementById("otherBox");
+  if (/MicroMessenger/i.test(ua)) {
+    // 微信内:直接展示微信收款码,长按识别走原生扫码通道
+    wxBox.style.display = "block";
+  } else if (/AlipayClient/i.test(ua)) {
+    // 支付宝内:链接可直接跳转
+    location.replace(aliUrl);
+  } else {
+    // 其他浏览器(如系统相机):给支付宝按钮,微信用户看提示
+    otherBox.style.display = "block";
+    document.getElementById("spinner").style.display = "none";
+    document.getElementById("hint").textContent = "请选择支付方式";
+    document.getElementById("manualBtns").style.display = "flex";
+    document.getElementById("manualTip").style.display = "block";
+  }
+})();
+</script>
+</body>
+</html>
